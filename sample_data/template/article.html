@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="/static/default.css" />
+  <link href="/static/github-gist.css" rel="stylesheet" />
+  <script src="/static/embed_html.js"></script>
+  <script src="/static/process_latex.js"></script>
+  <script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+  </script>
+  <script src="/static/highlight.pack.js"></script>
+  <script src="/static/highlight.js"></script>
+
+  <title>
+    Sample data
+  </title>
+</head>
+
+<body>
+  <div id="whole">
+    <div id="header" w3-include-html="/static/head.html">
+    </div>
+    <div id="nav" w3-include-html="/static/nav.html">
+    </div>
+    <div id="content">
+      <div id="left" w3-include-html="/static/left.html"></div>
+      <div id="main">
+          <p>
+              <a href="{{parent_link}}">Return</a>
+          </p>
+      
+        {{content}}
+      </div>
+      <div id="right" w3-include-html="/static/right.html">
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    includeHTML()
+    process_latex();
+    highlightCode();
+  </script>
+</body>
+
+</html>
