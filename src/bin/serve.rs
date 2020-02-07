@@ -1,19 +1,18 @@
+use rocket::Route;
+use rocket::http::Method;
+use rocket::handler::Outcome;
+use rocket::outcome::IntoOutcome;
+use rocket::Request;
+use rocket::Data;
+use rocket::Handler;
+use rocket::response::content;
+use rocket::config::{Config, Environment};
 extern crate simple_page;
-use actix_web::middleware::Logger;
-use actix_web::{App, HttpServer};
-extern crate log;
+
+use simple_page::{MyHandler, StaticFileHandler, HardFileHandler};
 
 fn main() {
     let matches = clap::App::new("server")
-        .arg(
-            clap::Arg::with_name("addr")
-                .required(false)
-                .takes_value(true)
-                .value_name("ip addr:port")
-                .short("a")
-                .long("addr")
-                .help("ip addr with port"),
-        )
         .arg(
             clap::Arg::with_name("data_path")
                 .required(true)
@@ -25,62 +24,25 @@ fn main() {
         )
         .get_matches();
 
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
+    let data_path:String=matches.value_of("data_path").unwrap().to_string();
 
-    let addr = matches.value_of("addr").unwrap_or("127.0.0.1:8000");
-    let root_path = matches.value_of("data_path").unwrap().to_string();
-    let article_path = root_path.clone() + "/articles";
-    let misc_article_path = root_path.clone() + "/misc";
+    let article_handler=MyHandler::new((data_path.clone()+"/articles").into(), (data_path.clone()+"/template/article.html").into(), (data_path.clone()+"/template/dir.html").into(), "articles".into());
 
-    let article_template = root_path.clone() + "/template/article.html";
-    let misc_article_template = root_path.clone() + "/template/misc.html";
-    let dir_template = root_path.clone() + "/template/dir.html";
-    let static_dir = root_path.clone() + "/static";
-    let index_path = root_path.clone() + "/index.html";
-    let article_cfg = vec![
-        simple_page::DynArticleCfg::new(
-            article_path.into(),
-            article_template.into(),
-            dir_template.clone().into(),
-            "articles".into(),
-        ),
-        simple_page::DynArticleCfg::new(
-            misc_article_path.into(),
-            misc_article_template.into(),
-            dir_template.into(),
-            "misc".into(),
-        ),
-    ];
+    let misc_handler=MyHandler::new((data_path.clone()+"/misc").into(), (data_path.clone()+"/template/misc.html").into(), (data_path.clone()+"/template/dir.html").into(), "misc".into());
 
-    let static_cfg = simple_page::StaticCfg::new("static".to_string(), static_dir.into());
 
-    //let cfg_func=simple_page::compose_cfg(cfg);
-    HttpServer::new(move || {
-        let article_cfg = article_cfg.clone();
-        let static_cfg = static_cfg.clone();
-        //let cfg=cfg;
-        App::new()
-            .configure(
-                //simple_page::compose_cfg(cfg)
-                simple_page::compose_cfg1(article_cfg, vec![static_cfg])
-                    .with_static_file("/".into(), index_path.clone().into())
-                    .with_static_file("/index.html".into(), index_path.clone().into())
-                    .with_static_file(
-                        "/favicon.ico".into(),
-                        (root_path.clone() + "/favicon.ico").into(),
-                    )
-                    .with_static_file(
-                        "/robots.txt".into(),
-                        (root_path.clone() + "/robots.txt").into(),
-                    )
-                    .cfg_fn,
-            )
-            .wrap(Logger::default())
-            .wrap(Logger::new("%a %{User-Agent}i"))
-    })
-    .bind(addr)
-    .unwrap()
-    .run()
-    .unwrap()
+    let static_handler=StaticFileHandler::new((data_path.clone()+"/static").into());
+
+    let index_handler=HardFileHandler::new((data_path.clone()+"/index.html").into());
+    let robots_handler=HardFileHandler::new((data_path.clone()+"/robots.txt").into());
+    let favicon_handler=HardFileHandler::new((data_path.clone()+"/favicon.ico").into());
+
+    rocket::ignite().mount("/articles", vec![Route::new(Method::Get, "/<a..>", article_handler.clone()), Route::new(Method::Get, "/", article_handler.clone())])
+    .mount("/misc", vec![Route::new(Method::Get, "/<a..>", misc_handler.clone()), Route::new(Method::Get, "/", misc_handler.clone())])
+    .mount("/", vec![Route::new(Method::Get, "/", index_handler.clone()), Route::new(Method::Get, "/index.html", index_handler.clone()),
+    Route::new(Method::Get, "/robots.txt", robots_handler.clone()),
+    Route::new(Method::Get, "/favicon.ico", favicon_handler.clone()),
+    ])
+    .mount("/static", vec![Route::new(Method::Get, "/<a..>", static_handler)])
+    .launch();    
 }
