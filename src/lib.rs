@@ -6,11 +6,11 @@ use std::path::PathBuf;
 #[macro_use]
 extern crate serde_json;
 use handlebars::Handlebars;
-use rocket::Route;
+//use rocket::Route;
 use rocket::http::Status;
-use rocket::http::Method;
+//use rocket::http::Method;
 use rocket::handler::Outcome;
-use rocket::outcome::IntoOutcome;
+//use rocket::outcome::IntoOutcome;
 use rocket::Request;
 use rocket::Data;
 use rocket::Handler;
@@ -128,13 +128,13 @@ impl MyHandler{
 
 
 impl Handler for MyHandler{
-    fn handle<'r>(&self, request: &'r Request, data: Data)->Outcome<'r>{
+    fn handle<'r>(&self, request: &'r Request, _data: Data)->Outcome<'r>{
         let mut article_path = self.base_path.clone();
         println!("{:?}", article_path);
-        if let Ok(web_path)=request.get_segments::<'r, std::path::PathBuf>(0).unwrap_or(Ok("".into())) {
+        if let Ok(web_path)=request.get_segments::<'r, std::path::PathBuf>(0).unwrap_or_else(|| Ok("".into())) {
             article_path.push(web_path.clone());
             println!("article path={:?}", article_path);
-            let current_path = PathBuf::from(web_path.clone());
+            let current_path = web_path.clone();
             let parent = current_path.parent();
             let parent_link = if let Some(x) = parent {
                 String::new() + "/" + &self.article_prefix + "/" + x.to_str().unwrap()
@@ -163,7 +163,7 @@ impl Handler for MyHandler{
                 } else {
                     Outcome::Failure(Status::NotFound)
                 }
-            }else if(article_path.is_dir()){
+            }else if article_path.is_dir(){
                 let titles: Vec<_> = self.enumerate_article_items(article_path, web_path)
                 .into_iter()
                 .map(|p| {
@@ -213,9 +213,9 @@ impl StaticFileHandler{
 }
 
 impl Handler for StaticFileHandler{
-    fn handle<'r>(&self, request: &'r Request, data: Data)->Outcome<'r>{
+    fn handle<'r>(&self, request: &'r Request, _data: Data)->Outcome<'r>{
         let mut file_path=self.base_path.clone();
-        if let Ok(web_path)=request.get_segments::<'r, std::path::PathBuf>(0).unwrap_or(Ok("".into())){
+        if let Ok(web_path)=request.get_segments::<'r, std::path::PathBuf>(0).unwrap_or_else(|| Ok("".into())){
             file_path.push(web_path);
             println!("static: {:?}", file_path);
             if let Ok(f)=NamedFile::open(file_path){
@@ -243,7 +243,7 @@ impl HardFileHandler{
 }
 
 impl Handler for HardFileHandler{
-    fn handle<'r>(&self, request: &'r Request, data: Data)->Outcome<'r>{
+    fn handle<'r>(&self, request: &'r Request, _data: Data)->Outcome<'r>{
         if let Ok(f)=NamedFile::open(self.file.clone()){
             Outcome::from(request, f)
         }else{

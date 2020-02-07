@@ -1,12 +1,5 @@
 use rocket::Route;
 use rocket::http::Method;
-use rocket::handler::Outcome;
-use rocket::outcome::IntoOutcome;
-use rocket::Request;
-use rocket::Data;
-use rocket::Handler;
-use rocket::response::content;
-use rocket::config::{Config, Environment};
 extern crate simple_page;
 
 use simple_page::{MyHandler, StaticFileHandler, HardFileHandler};
@@ -35,13 +28,13 @@ fn main() {
 
     let index_handler=HardFileHandler::new((data_path.clone()+"/index.html").into());
     let robots_handler=HardFileHandler::new((data_path.clone()+"/robots.txt").into());
-    let favicon_handler=HardFileHandler::new((data_path.clone()+"/favicon.ico").into());
+    let favicon_handler=HardFileHandler::new((data_path+"/favicon.ico").into());
 
-    rocket::ignite().mount("/articles", vec![Route::new(Method::Get, "/<a..>", article_handler.clone()), Route::new(Method::Get, "/", article_handler.clone())])
-    .mount("/misc", vec![Route::new(Method::Get, "/<a..>", misc_handler.clone()), Route::new(Method::Get, "/", misc_handler.clone())])
-    .mount("/", vec![Route::new(Method::Get, "/", index_handler.clone()), Route::new(Method::Get, "/index.html", index_handler.clone()),
-    Route::new(Method::Get, "/robots.txt", robots_handler.clone()),
-    Route::new(Method::Get, "/favicon.ico", favicon_handler.clone()),
+    rocket::ignite().mount("/articles", vec![Route::new(Method::Get, "/<a..>", article_handler.clone()), Route::new(Method::Get, "/", article_handler)])
+    .mount("/misc", vec![Route::new(Method::Get, "/<a..>", misc_handler.clone()), Route::new(Method::Get, "/", misc_handler)])
+    .mount("/", vec![Route::new(Method::Get, "/", index_handler.clone()), Route::new(Method::Get, "/index.html", index_handler),
+    Route::new(Method::Get, "/robots.txt", robots_handler),
+    Route::new(Method::Get, "/favicon.ico", favicon_handler),
     ])
     .mount("/static", vec![Route::new(Method::Get, "/<a..>", static_handler)])
     .launch();    
