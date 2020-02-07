@@ -9,6 +9,7 @@ port = 8000
 workers = 1
 keep_alive = 5
 log = "normal"
+secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
 
 [staging]
 address = "0.0.0.0"
@@ -16,7 +17,7 @@ port = 8000
 workers = 8
 keep_alive = 5
 log = "normal"
-# don't use this key! generate your own and keep it private!
+secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
 
 [production]
 address = "0.0.0.0"
@@ -24,4 +25,4 @@ port = 80
 workers = 12
 keep_alive = 5
 log = "critical"
-# don't use this key! generate your own and keep it private!
+secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
