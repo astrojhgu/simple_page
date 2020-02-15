@@ -3,9 +3,9 @@ clap = '2.33.0'
 env_logger = '0.7.1'
 handlebars = '3.0.1'
 log = '0.4.8'
-pulldown-cmark = '0.6.1'
+pulldown-cmark = '0.7.0'
 rocket = '0.4.2'
-serde_json = '1.0.46'
+serde_json = '1.0.48'
 
 [package]
 authors = ['Gu Junhua <jhgu@nao.cas.cn>']
