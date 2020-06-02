@@ -11,9 +11,9 @@ fn main() {
                 .required(true)
                 .takes_value(true)
                 .value_name("data path")
-                .short("d")
+                .short('d')
                 .long("dp")
-                .help("data path"),
+                .about("data path"),
         )
         .get_matches();
 
