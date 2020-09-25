@@ -24,5 +24,5 @@ address = "0.0.0.0"
 port = 80
 workers = 12
 keep_alive = 5
-log = "critical"
+log = "normal"
 secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
