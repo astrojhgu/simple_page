@@ -7,7 +7,7 @@ use simple_page::{MyHandler, StaticFileHandler, HardFileHandler};
 fn main() {
     let matches = clap::App::new("server")
         .arg(
-            clap::Arg::with_name("data_path")
+            clap::Arg::new("data_path")
                 .required(true)
                 .takes_value(true)
                 .value_name("data path")
