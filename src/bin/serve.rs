@@ -1,71 +1,75 @@
-use rocket::http::Method;
-use rocket::Route;
+#![feature(proc_macro_hygiene, decl_macro, try_trait)]
+#[macro_use]
+extern crate rocket;
+
+use handlebars::Handlebars;
+
+use rocket::{fairing::AdHoc, response::NamedFile, State};
+
+use std::path::PathBuf;
+
 extern crate simple_page;
 
-use simple_page::{HardFileHandler, MyHandler, StaticFileHandler};
+use simple_page::types::{DataDir, StaticDir, Template};
+
+#[get("/index.html", rank = 0)]
+pub fn home_page(data_dir: State<DataDir>) -> Option<NamedFile> {
+    NamedFile::open(data_dir.0.join("index.html")).ok()
+}
 
 fn main() {
-    let matches = clap::App::new("server")
-        .arg(
-            clap::Arg::new("data_path")
-                .required(true)
-                .takes_value(true)
-                .value_name("data path")
-                .short('d')
-                .long("dp")
-                .about("data path"),
-        )
-        .get_matches();
-
-    let data_path: String = matches.value_of("data_path").unwrap().to_string();
-
-    let article_handler = MyHandler::new(
-        (data_path.clone() + "/articles").into(),
-        (data_path.clone() + "/template/article.html").into(),
-        (data_path.clone() + "/template/dir.html").into(),
-        "articles".into(),
-    );
-
-    let misc_handler = MyHandler::new(
-        (data_path.clone() + "/misc").into(),
-        (data_path.clone() + "/template/misc.html").into(),
-        (data_path.clone() + "/template/dir.html").into(),
-        "misc".into(),
-    );
-
-    let static_handler = StaticFileHandler::new((data_path.clone() + "/static").into());
-
-    let index_handler = HardFileHandler::new((data_path.clone() + "/index.html").into());
-    let robots_handler = HardFileHandler::new((data_path.clone() + "/robots.txt").into());
-    let favicon_handler = HardFileHandler::new((data_path + "/favicon.ico").into());
-
     rocket::ignite()
         .mount(
-            "/articles",
-            vec![
-                Route::new(Method::Get, "/<a..>", article_handler.clone()),
-                Route::new(Method::Get, "/", article_handler),
-            ],
-        )
-        .mount(
-            "/misc",
-            vec![
-                Route::new(Method::Get, "/<a..>", misc_handler.clone()),
-                Route::new(Method::Get, "/", misc_handler),
-            ],
-        )
-        .mount(
             "/",
-            vec![
-                Route::new(Method::Get, "/", index_handler.clone()),
-                Route::new(Method::Get, "/index.html", index_handler),
-                Route::new(Method::Get, "/robots.txt", robots_handler),
-                Route::new(Method::Get, "/favicon.ico", favicon_handler),
+            routes![
+                simple_page::static_file,
+                simple_page::html_handler,
+                simple_page::not_found,
+                simple_page::markerdown_handler,
+                simple_page::dir_handler,
+                simple_page::root_handler,
+                home_page
             ],
         )
-        .mount(
-            "/static",
-            vec![Route::new(Method::Get, "/<a..>", static_handler)],
-        )
+        .attach(AdHoc::on_attach("Static Dir", |rocket| {
+            let static_dir = rocket.config().get_str("static_dir").unwrap().to_string();
+
+            let data_dir = rocket.config().get_str("data_dir").unwrap().to_string();
+
+            let article_template = rocket
+                .config()
+                .get_str("article_template")
+                .unwrap()
+                .to_string();
+
+            let dir_template = rocket.config().get_str("dir_template").unwrap().to_string();
+
+            let mut reg = Handlebars::new();
+            reg.unregister_escape_fn();
+            reg.register_escape_fn(handlebars::no_escape);
+            reg.register_template_string(
+                "article_template",
+                std::fs::read_to_string(article_template.clone()).unwrap_or_else(|_| {
+                    eprintln!("{:?} not found", article_template);
+                    panic!()
+                }),
+            )
+            .unwrap();
+
+            reg.register_template_string(
+                "dir_template",
+                std::fs::read_to_string(dir_template.clone()).unwrap_or_else(|_| {
+                    eprintln!("{:?} not found", dir_template);
+                    panic!()
+                }),
+            )
+            .unwrap();
+
+            let rkt = rocket
+                .manage(StaticDir(PathBuf::from(static_dir)))
+                .manage(DataDir(PathBuf::from(data_dir)))
+                .manage(Template(reg));
+            Ok(rkt)
+        }))
         .launch();
 }
