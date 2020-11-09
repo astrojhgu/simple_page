@@ -12,7 +12,7 @@ extern crate simple_page;
 
 use simple_page::types::{DataDir, StaticDir, Template};
 
-#[get("/index.html", rank = 0)]
+#[get("/", rank = 0)]
 pub fn home_page(data_dir: State<DataDir>) -> Option<NamedFile> {
     NamedFile::open(data_dir.0.join("index.html")).ok()
 }
