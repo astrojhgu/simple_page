@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate rocket;
 
+use clap::{App, Arg};
 use handlebars::Handlebars;
 
 use rocket::{fairing::AdHoc, response::NamedFile, State};
@@ -12,12 +13,21 @@ extern crate simple_page;
 
 use simple_page::types::{DataDir, StaticDir, Template};
 
-#[get("/", rank = 0)]
-pub fn home_page(data_dir: State<DataDir>) -> Option<NamedFile> {
-    NamedFile::open(data_dir.0.join("index.html")).ok()
-}
+
 
 fn main() {
+    let matches=App::new("serve")
+    .arg(
+        Arg::new("root")
+        .short('r')
+        .long("root")
+        .takes_value(true)
+        .required(true)
+        .value_name("root dir")
+    ).get_matches();
+    
+    let root_dir=matches.value_of("root").unwrap().to_string();
+
     rocket::ignite()
         .mount(
             "/",
@@ -28,21 +38,21 @@ fn main() {
                 simple_page::markerdown_handler,
                 simple_page::dir_handler,
                 simple_page::root_handler,
-                home_page
+                simple_page::top_level,
+                simple_page::index,
             ],
         )
-        .attach(AdHoc::on_attach("Static Dir", |rocket| {
-            let static_dir = rocket.config().get_str("static_dir").unwrap().to_string();
+        .attach(AdHoc::on_attach("Static Dir", move |rocket| {
+            let static_dir = root_dir.clone()+"/"+rocket.config().get_str("static_dir").unwrap();
 
-            let data_dir = rocket.config().get_str("data_dir").unwrap().to_string();
+            let data_dir = root_dir.clone();
 
-            let article_template = rocket
+            let article_template = root_dir.clone()+"/"+rocket
                 .config()
                 .get_str("article_template")
-                .unwrap()
-                .to_string();
+                .unwrap();
 
-            let dir_template = rocket.config().get_str("dir_template").unwrap().to_string();
+            let dir_template = root_dir.clone()+"/"+rocket.config().get_str("dir_template").unwrap();
 
             let mut reg = Handlebars::new();
             reg.unregister_escape_fn();

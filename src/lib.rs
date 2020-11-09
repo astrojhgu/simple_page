@@ -23,7 +23,7 @@ use rocket::{
 };
 
 pub mod types;
-use types::{ArticleItem, DataDir, DirPath, FileWithExt, Template};
+use types::{ArticleItem, DataDir, DirPath, FileWithExt, Template, SpecialFile};
 
 pub fn regulate_link(s: &str) -> String {
     if s == "" {
@@ -113,12 +113,21 @@ pub fn dir_handler(
                 .to_owned()
                 .to_string()
                 .as_str();
+
+        let current_dir = "/".to_string()
+        + root.as_str()
+        + "/"
+        + path.0
+            .to_string_lossy()
+            .to_owned()
+            .to_string()
+            .as_str();
         eprintln!("cd1={:?}", path.parent_dir());
         eprintln!("path={:?}", path.0);
 
         if let Ok(s) = template.0.render(
             "dir_template",
-            &json!({ "items": titles , "parent_link": parent_link}),
+            &json!({ "items": titles , "parent_link": parent_link, "current_dir": current_dir}),
         ) {
             //println!("{:?}", s);
             Some(content::Html(s))
@@ -132,7 +141,22 @@ pub fn dir_handler(
     }
 }
 
-#[get("/<root>", rank = 4)]
+
+#[get("/<fname>", rank=5)]
+pub fn top_level(fname: SpecialFile, data_dir: State<DataDir>) -> Option<NamedFile> {
+    eprintln!("{:?}", fname.0);
+    
+    eprintln!("{:?}", data_dir.0.join(fname.0.clone()));
+    NamedFile::open(data_dir.0.join(fname.0)).ok()
+}
+
+#[get("/", rank=5)]
+pub fn index(data_dir: State<DataDir>) -> Option<NamedFile> {
+    NamedFile::open(data_dir.0.join("index.html")).ok()
+}
+
+
+#[get("/<root>", rank = 20)]
 pub fn root_handler(
     root: String,
     data_dir: State<DataDir>,
@@ -163,7 +187,7 @@ pub fn markerdown_handler(
             "/".to_string() + root.as_str() + "/" + path.current_dir().to_str().unwrap();
         if let Ok(s) = template.0.render(
             "article_template",
-            &json!({ "content": html_output , "parent_link": parent_link}),
+            &json!({ "content": html_output , "parent_link": parent_link, "current_dir": parent_link}),
         ) {
             Some(content::Html(s))
         } else {
@@ -174,10 +198,11 @@ pub fn markerdown_handler(
     }
 }
 
-#[get("/404")]
+#[get("/404", rank=100)]
 pub fn not_found() -> Status {
     Status::NotFound
 }
+
 
 #[get("/<root>/<path..>", rank = 2)]
 pub fn html_handler(

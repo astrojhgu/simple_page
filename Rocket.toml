@@ -11,10 +11,9 @@ workers = 1
 keep_alive = 5
 log = "normal"
 secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
-static_dir = "pagedata/static"
-data_dir = "pagedata"
-article_template = "pagedata/template/article.html"
-dir_template = "pagedata/template/dir.html"
+static_dir = "static"
+article_template = "template/article.html"
+dir_template = "template/dir.html"
 
 
 [staging]
@@ -24,10 +23,9 @@ workers = 8
 keep_alive = 5
 log = "normal"
 secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
-static_dir = "pagedata/static"
-data_dir = "pagedata"
-article_template = "pagedata/template/article.html"
-dir_template = "pagedata/template/dir.html"
+static_dir = "static"
+article_template = "template/article.html"
+dir_template = "template/dir.html"
 
 
 [production]
@@ -37,7 +35,6 @@ workers = 12
 keep_alive = 5
 log = "normal"
 secret_key = "En+D9uPU2290TJ4keIDp4Y2wJuyUlVkx+lXymiyPvfs="
-static_dir = "pagedata/static"
-data_dir = "pagedata"
-article_template = "pagedata/template/article.html"
-dir_template = "pagedata/template/dir.html"
+static_dir = "static"
+article_template = "template/article.html"
+dir_template = "template/dir.html"
