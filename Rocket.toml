@@ -4,7 +4,7 @@ json = 1048576 # this is an extra used by the json contrib module
 msgpack = 1048576 # this is an extra used by the msgpack contrib module
 
 [development]
-address = "localhost"
+address = "127.0.0.1"
 port = 8000
 workers = 1
 keep_alive = 5
