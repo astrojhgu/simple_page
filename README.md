@@ -7,5 +7,5 @@ simple_page is a simple/naive http server program for personal web page serving.
 
 ## Running
 ```bash
-cargo run --bin serve -- -d ./sample_data --addr 127.0.0.1:8000
+cargo run --bin serve -- -r ./sample_data
 ```
